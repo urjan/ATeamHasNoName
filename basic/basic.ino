@@ -1,18 +1,24 @@
 /*
-MarvinLaptop
+  MarvinLaptop
 
-Basic controls of IoT Academy Marvin LoRa Development board through your Laptop
+  Basic controls of IoT Academy Marvin LoRa Development board through your Laptop
 
-This version supports:
+  This version supports:
 	- Sending LoRa uplink messages using ABP that are given as input from the serial port on your laptop
 	- Blink three times when sending data
   - Power control to RN2483 module
 
-Instructions:
+  Instructions:
 	- Get the latest version of the Arduino software
 	- In Arduino IDE select Arduino Leonardo and com port of your device
 	- Please adjust ABP adresses and key below to match yours
 */
+#include"WString.h"
+#include"String.h"
+#include"AirQuality.h"
+#include"Arduino.h"
+#include <math.h>
+
 // Port to assign the type of lora data (any port can be used between 1 and 223)
 int     set_port  = 1;
 
@@ -29,32 +35,84 @@ String  set_appskey = "f9bccebfad1511f9613df05752b7b4de";
 String  set_devaddr = "04001E47";
 //*** <---- END Set parameters here
 
-// Some global items
-String reader = "";
+
+//******* Light sensor stuff--------
+#define LIGHT_SENSOR A0               //Grove - Light Sensor is connected to A0 of Arduino
+const int thresholdvalue=10;          //The treshold for which the LED should turn on. Setting it lower will make it go on at more light, higher for more darkness                       //Resistance of sensor in K
+//------------------
+
+//********** Air quality sensor stuff...........
+
+AirQuality airqualitysensor;
+int current_quality =-1;
+
 
 /*
- * Setup() function is called when board is started. Marvin uses a serial connection to talk to your pc and a serial
- * connection to talk to the RN2483, these are both initialized in seperate functions. Also some Arduino port are 
- * initialized and a LED is called to blink when everything is done. 
- */
+   Setup() function is called when board is started. Marvin uses a serial connection to talk to your pc and a serial
+   connection to talk to the RN2483, these are both initialized in seperate functions. Also some Arduino port are
+   initialized and a LED is called to blink when everything is done.
+*/
 void setup() {
   InitializeSerials(defaultBaudRate);
   initializeRN2483(RN2483_power_port, reset_port);
-  pinMode(led_port, OUTPUT); // Initialize LED port  
+  pinMode(led_port, OUTPUT); // Initialize LED port
   blinky();
-  print_to_console("Payload?");
+
+//Air quality:
+    airqualitysensor.init(14);
+
+  
 }
 
 void loop() {
 
-    reader = "111";
-    print_to_console("Sending data to LoRa");  
-    send_LoRa_data(set_port, reader);
+//----------- Light sensor stuff---------
+    int sensorValue = analogRead(LIGHT_SENSOR); 
+    print_to_console("Light sensor value read: ");
+    print_to_console(String(sensorValue));
+
+//------------ Air quality:
+    current_quality=airqualitysensor.slope();
+    if (current_quality >= 0)// if a valid data returned.
+    {
+        if (current_quality==0) 
+            print_to_console("High pollution! Force signal active");
+        else if (current_quality==1)
+            print_to_console("High pollution!");
+        else if (current_quality==2)
+            print_to_console("Low pollution!");
+        else if (current_quality ==3)
+            print_to_console("Fresh air");
+    }
+
+   
+    print_to_console("Sending data to LoRa");
+    
+    send_LoRa_data(set_port, String(sensorValue));
+    send_LoRa_data(set_port, String(current_quality));
+    
     print_to_console("Sent to LoRa");
     read_data_from_LoRa_Mod();
- 
 
 }
+
+//ISR for Air quality sensor
+ISR(TIMER1_OVF_vect)
+{
+  if(airqualitysensor.counter==61)//set 2 seconds as a detected duty
+  {
+      airqualitysensor.last_vol=airqualitysensor.first_vol;
+      airqualitysensor.first_vol=analogRead(A2);
+      airqualitysensor.counter=0;
+      airqualitysensor.timer_index=1;
+      PORTB=PORTB^0x20;
+  }
+  else
+  {
+    airqualitysensor.counter++;
+  }
+}
+
 
 void InitializeSerials(long baudrate)
 {
@@ -71,7 +129,7 @@ void initializeRN2483(int pwr_port, int rst_port)
   digitalWrite(pwr_port, HIGH);
   print_to_console("RN2483 Powered up");
   delay(1000);
-  
+
   //Disable reset pin
   pinMode(rst_port, OUTPUT);
   digitalWrite(rst_port, HIGH);
@@ -120,7 +178,7 @@ void read_data_from_LoRa_Mod()
     String inByte = Serial1.readString();
     print_to_console("Got this from Lora");
     Serial.println(inByte);
- 
+
   }
 
 }
@@ -134,7 +192,6 @@ void send_LoRa_Command(String cmd)
 
 void send_LoRa_data(int tx_port, String rawdata)
 {
-  rawdata = "111";
   send_LoRa_Command("mac tx uncnf " + String(tx_port) + String(" ") + rawdata);
 }
 
