@@ -1,16 +1,4 @@
-/*
-MarvinBase
-Basic controls of IoT Academy Marvin LoRa Development board.
-This version supports:
-  - Sending LoRa uplink messages using ABP 
-  - Blink three times when sending data
-  - Power control to RN2483 module
-Instructions:
-  - Get the latest version of the Arduino software
-  - In Arduino IDE select Arduino Leonardo and com port of your device
-  - Please adjust ABP adresses and key below to match yours
-  - The loop() is where the actual stuff happens. Adjust input of send_lora_data() in void loop() to send your own data.
-*/
+
 // Port to assign the type of lora data (any port can be used between 1 and 223)
 int     set_port  = 1;
 
@@ -32,21 +20,14 @@ float concentration = 0;
 //*** Set parameters here BEGIN ---->
 String  set_nwkskey = "14f8bc7262d957928f41bd3a71d98002";
 String  set_appskey = "f9bccebfad1511f9613df05752b7b4de";
-String  set_devaddr = "04001E46";
+String  set_devaddr = "04001E47";
 //*** <---- END Set parameters here
-
-//** Set thigs right for the Grove temperature / humidity sensor
-//#include "DHT.h"      //download it here: https://github.com/Seeed-Studio/Grove_Temperature_And_Humidity_Sensor
-                      // press clone/download and then download as .zip
 
 #include"AirQuality.h"
 #include "math.h"  //SG
 #include "SoftwareSerial.h"
-//#define DHTPIN A3     // A3 is closes to the usb port of Marvin
 
-// define the type of sensor used (there are others)
-//#define DHTTYPE DHT11   // DHT 11 
-#define LIGHT_SENSOR A0//Grove - Light Sensor is connected to A0 of Arduino
+#define LIGHT_SENSOR A0                     //Grove - Light Sensor is connected to A0 of Arduino
 const int light_thresholdvalue=10;         //The treshold for which the LED should turn on. Setting it lower will make it go on at more light, higher for more darkness
 AirQuality airqualitysensor;
 int current_quality =-1;
@@ -55,13 +36,6 @@ SoftwareSerial SoftSerial(2, 3);
 unsigned char buffer[64];                   // buffer array for data receive over serial port
 int count=0;                                // counter for buffer array
 
-//DHT dht(DHTPIN, DHTTYPE);
-
-/*
- * Setup() function is called when board is started. Marvin uses a serial connection to talk to your pc and a serial
- * connection to talk to the RN2483, these are both initialized in seperate functions. Also some Arduino port are 
- * initialized and a LED is called to blink when everything is done. 
- */
 
  //SG
 const int B = 4275;               // B value of the thermistor
@@ -130,7 +104,7 @@ void loop() {
     }
 /* air quality sensor*/
 /* Loudness sensor*/
-    loudness_value = analogRead(0);
+    loudness_value = analogRead(5);
     Serial.print("Loudness_value is :");
     Serial.println(loudness_value);
 /* Loudness sensor*/
