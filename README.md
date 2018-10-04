@@ -1,4 +1,4 @@
-# ATeamHasNoName
+# A Team Has No Name
 Code and files of the MachineQ hackathon sponsored by Comcast.
 
 So, everyday morning you wake up and take a look at maps to get to work, school or wherever it is you wanna go, so you could save a couple of minutes. What if we told you that instead of saving a few minutes of your journey today, we could give you a couple of hours at your journey in life! What we give you is a cleaner, safer and healthier route to travel!
